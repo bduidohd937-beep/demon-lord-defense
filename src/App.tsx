@@ -9,6 +9,9 @@ import {
   monsterAttack, monsterMaxHp, monsterUpgradeCost,
   repairCastle, simulateWave, swapRooms, upgradeMonster,
 } from "./game/battleLogic";
+import CharacterSprite from "./components/CharacterSprite";
+import BattleArena from "./components/BattleArena";
+import { activateAudio, playBattleCue } from "./game/battleAudio";
 import "./App.css";
 
 const SAVE_KEY = "demon-lord-defense-v01";
@@ -53,10 +56,11 @@ function loadGame(): GameState {
 
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame);
-  const [selectedRoom, setSelectedRoom] = useState(1);
+  const [selectedRoom, setSelectedRoom] = useState(0);
   const [battle, setBattle] = useState<BattleReport | null>(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [fast, setFast] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
 
@@ -76,9 +80,14 @@ export default function App() {
       setFrameIndex(0);
       return;
     }
-    const timer = window.setTimeout(() => setFrameIndex(index => index + 1), fast ? 110 : 430);
+    const timer = window.setTimeout(() => setFrameIndex(index => index + 1), fast ? 165 : 650);
     return () => window.clearTimeout(timer);
   }, [battle, frameIndex, fast]);
+
+  useEffect(() => {
+    if (!battle || !soundEnabled) return;
+    playBattleCue(battle.frames[Math.min(frameIndex, battle.frames.length - 1)]);
+  }, [battle, frameIndex, soundEnabled]);
 
   const frame = battle ? battle.frames[Math.min(frameIndex, battle.frames.length - 1)] : null;
   const isBattling = battle !== null;
@@ -86,7 +95,6 @@ export default function App() {
   const castleHp = frame?.castleHp ?? game.castleHp;
   const roomHp = frame?.roomHp ?? game.rooms.map(slot => slot ? monsterMaxHp(slot) : 0);
   const waveEnemies = WAVES[game.wave - 1] ?? [];
-  const progress = battle ? Math.round((frameIndex + 1) / battle.frames.length * 100) : 0;
   const selected = game.rooms[selectedRoom];
 
   const beginBattle = () => {
@@ -106,7 +114,7 @@ export default function App() {
     setBattle(null);
     setFrameIndex(0);
     setGame(structuredClone(INITIAL_GAME));
-    setSelectedRoom(1);
+    setSelectedRoom(0);
   };
   const hire = (id: MonsterId) => setGame(current => hireMonster(current, selectedRoom, id));
 
@@ -121,7 +129,7 @@ export default function App() {
               <h1>마왕님, 용사가 너무 많아요!</h1>
             </div>
           </div>
-          <span className="version">EARLY ACCESS · V0.1</span>
+          <span className="version">EARLY ACCESS · V0.2</span>
         </div>
       </header>
 
@@ -168,6 +176,21 @@ export default function App() {
                 </div>
               )}
 
+              <BattleArena
+                game={game}
+                battle={battle}
+                frame={frame}
+                frameIndex={frameIndex}
+                selectedRoom={selectedRoom}
+                fast={fast}
+                soundEnabled={soundEnabled}
+                onToggleSpeed={() => setFast(value => !value)}
+                onToggleSound={() => {
+                  if (!soundEnabled) activateAudio();
+                  setSoundEnabled(value => !value);
+                }}
+                onSkip={skipBattle}
+              />
               <div className="rooms">
                 {game.rooms.map((slot, index) => {
                   const monster = slot ? MONSTERS[slot.id] : null;
@@ -193,8 +216,8 @@ export default function App() {
                       </div>
                       <div className="room-stage">
                         <span className="room-decoration">{["🕯️", "🦴", "🔥"][index]}</span>
-                        <span className="monster-sprite" aria-hidden="true">{monster?.emoji ?? "➕"}</span>
-                        {invader && <span key={frameIndex} className="invader-sprite" aria-label="침입자">{HEROES[invader.id].emoji}</span>}
+                        {monster ? <CharacterSprite side="monster" id={monster.id} className="room-monster-art" /> : <span className="monster-sprite" aria-hidden="true">➕</span>}
+                        {invader && <span key={frameIndex} className="invader-sprite" aria-label="침입자"><CharacterSprite side="hero" id={invader.id} /></span>}
                       </div>
                       <strong className="room-name">{monster?.name ?? "빈 방"}</strong>
                       <span className="room-subtitle">{slot ? "Lv." + slot.level + " · 공격 " + monsterAttack(slot) : "몬스터를 배치하세요"}</span>
@@ -211,29 +234,6 @@ export default function App() {
               </div>
               <div className="room-arrows" aria-hidden="true"><span>입구 🚩</span><span>① → ② → ③</span><span>👑 마왕성</span></div>
 
-              {battle && frame && (
-                <div className="battle-live" role="status" aria-live="off">
-                  <div className="battle-live-heading">
-                    <strong>⚔️ 전투 진행 중</strong>
-                    <span>{Math.min(frameIndex + 1, battle.frames.length)} / {battle.frames.length} 단계</span>
-                  </div>
-                  <div className="battle-progress"><span style={{ width: progress + "%" }} /></div>
-                  <p key={frameIndex} className="battle-message">{frame.message}</p>
-                  {frame.hero && frame.hero.hp > 0 && (
-                    <div className="enemy-status">
-                      {HEROES[frame.hero.id].emoji} {HEROES[frame.hero.id].name}
-                      <div className="enemy-hp"><span style={{ width: (frame.hero.hp / frame.hero.maxHp * 100) + "%" }} /></div>
-                      <small>{frame.hero.hp}/{frame.hero.maxHp}</small>
-                    </div>
-                  )}
-                  <div className="battle-actions">
-                    <button className="secondary-button" onClick={() => setFast(value => !value)}>
-                      {fast ? "⏱️ 보통 속도" : "⏩ 3배속"}
-                    </button>
-                    <button className="secondary-button" onClick={skipBattle}>⏭️ 결과로 건너뛰기</button>
-                  </div>
-                </div>
-              )}
               {!battle && game.phase === "planning" && (
                 <div className="battle-prep">
                   <div>
@@ -293,7 +293,7 @@ export default function App() {
                   const monster = MONSTERS[id];
                   return (
                     <div className="monster-product" key={id}>
-                      <div className="product-emoji">{monster.emoji}</div>
+                      <div className="product-emoji"><CharacterSprite side="monster" id={id} /></div>
                       <div className="product-detail">
                         <h3>{monster.name}</h3>
                         <p>{monster.description}</p>

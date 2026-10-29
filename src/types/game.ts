@@ -54,6 +54,9 @@ export interface BattleFrame {
   roomHp: number[];
   castleHp: number;
   kills: number;
+  damage?: number;
+  target?: "hero" | "monster" | "castle";
+  effect?: "slash" | "arrow" | "magic" | "blast";
 }
 
 export interface BattleReport {

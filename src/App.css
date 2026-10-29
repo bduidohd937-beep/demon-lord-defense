@@ -178,3 +178,40 @@ h1 { font-family: "Do Hyeon", "Noto Sans KR", sans-serif; font-weight: 400; colo
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* V0.2: original vector art throughout the dungeon management screen */
+.room-stage .character-art {
+  width: clamp(58px, 8vw, 95px);
+  height: 92px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 7px 5px #0908106c);
+  animation: idle-breathe 2.4s ease-in-out infinite alternate;
+}
+.room-fallen .room-stage .character-art { opacity: .35; filter: grayscale(1); animation: none; }
+.invader-sprite .character-art {
+  width: 54px;
+  height: 65px;
+  max-height: 65px;
+  transform: scaleX(-1);
+  filter: drop-shadow(0 0 9px #ffd09b);
+}
+.room-stage .invader-sprite { font-size: 0; }
+.product-emoji { display: grid; place-items: center; }
+.product-emoji .character-art {
+  display: block;
+  width: 47px;
+  height: 55px;
+  max-height: 55px;
+  filter: drop-shadow(0 5px 4px #0006);
+}
+@media (max-width: 760px) {
+  .room-stage .character-art { height: 69px; width: 63px; }
+  .invader-sprite .character-art { width: 34px; height: 43px; }
+  .product-emoji .character-art { width: 45px; height: 53px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-stage .character-art { animation: none !important; }
+}
