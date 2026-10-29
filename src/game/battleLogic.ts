@@ -66,7 +66,11 @@ export function simulateWave(state: GameState): BattleReport {
   const emit = (
     kind: BattleFrame["kind"], room: number | null, message: string,
     hero: BattleFrame["hero"],
-  ) => frames.push({ kind, room, message, hero: hero ? { ...hero } : null, roomHp: [...roomHp], castleHp, kills });
+    impact?: Pick<BattleFrame, "damage" | "target" | "effect">,
+  ) => frames.push({
+    kind, room, message, hero: hero ? { ...hero } : null,
+    roomHp: [...roomHp], castleHp, kills, ...impact,
+  });
 
   emit("spawn", null, "📯 용사들이 던전으로 진입합니다!", null);
 
@@ -91,7 +95,9 @@ export function simulateWave(state: GameState): BattleReport {
         const execute = monster.id === "goblin" && heroHp <= enemy.maxHp / 2 ? 3 : 0;
         const damage = Math.max(1, monsterAttack(placed) + firstShot + execute - enemy.armor);
         heroHp = Math.max(0, heroHp - damage);
-        emit("strike", room, monster.emoji + " " + monster.name + "의 공격! " + enemy.name + "에게 " + damage + " 피해", view());
+        emit("strike", room, monster.emoji + " " + monster.name + "의 공격! " + enemy.name + "에게 " + damage + " 피해", view(), {
+          damage, target: "hero", effect: monster.id === "archer" ? "arrow" : monster.id === "imp" ? "magic" : "slash",
+        });
 
         if (heroHp === 0) {
           kills++;
@@ -102,13 +108,17 @@ export function simulateWave(state: GameState): BattleReport {
         const guard = monster.id === "slime" ? 1 : 0;
         const received = Math.max(1, enemy.attack - monster.armor - guard);
         roomHp[room] = Math.max(0, roomHp[room] - received);
-        emit("counter", room, "⚔️ " + enemy.name + "의 반격! " + monster.name + "에게 " + received + " 피해", view());
+        emit("counter", room, "⚔️ " + enemy.name + "의 반격! " + monster.name + "에게 " + received + " 피해", view(), {
+          damage: received, target: "monster", effect: enemy.id === "mage" ? "magic" : "slash",
+        });
 
         if (roomHp[room] === 0) {
           emit("fallen", room, "💀 " + monster.name + " 전투 불능!", view());
           if (monster.id === "imp") {
             heroHp = Math.max(0, heroHp - 10);
-            emit("strike", room, "💣 임프의 마지막 폭발! 추가 10 피해", view());
+            emit("strike", room, "💣 임프의 마지막 폭발! 추가 10 피해", view(), {
+              damage: 10, target: "hero", effect: "blast",
+            });
             if (heroHp === 0) {
               kills++;
               emit("slain", room, "💥 " + enemy.name + " 폭발에 휘말려 격퇴!", view());
@@ -122,7 +132,9 @@ export function simulateWave(state: GameState): BattleReport {
     if (heroHp > 0) {
       castleHp = Math.max(0, castleHp - enemy.breach);
       breaches++;
-      emit("breach", null, "🚨 " + enemy.name + "이(가) 마왕성에 " + enemy.breach + " 피해!", view());
+      emit("breach", null, "🚨 " + enemy.name + "이(가) 마왕성에 " + enemy.breach + " 피해!", view(), {
+        damage: enemy.breach, target: "castle", effect: "blast",
+      });
       if (castleHp === 0) break outer;
     }
   }
