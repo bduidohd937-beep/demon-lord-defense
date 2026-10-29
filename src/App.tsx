@@ -56,7 +56,7 @@ function loadGame(): GameState {
 
 export default function App() {
   const [game, setGame] = useState<GameState>(loadGame);
-  const [selectedRoom, setSelectedRoom] = useState(1);
+  const [selectedRoom, setSelectedRoom] = useState(0);
   const [battle, setBattle] = useState<BattleReport | null>(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [fast, setFast] = useState(false);
@@ -114,7 +114,7 @@ export default function App() {
     setBattle(null);
     setFrameIndex(0);
     setGame(structuredClone(INITIAL_GAME));
-    setSelectedRoom(1);
+    setSelectedRoom(0);
   };
   const hire = (id: MonsterId) => setGame(current => hireMonster(current, selectedRoom, id));
 
