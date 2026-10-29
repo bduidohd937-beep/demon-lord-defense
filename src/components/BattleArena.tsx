@@ -3,6 +3,7 @@ import type { BattleFrame, BattleReport, GameState, HeroId, MonsterId } from "..
 import { HEROES, MONSTERS } from "../data/gameData";
 import { monsterMaxHp } from "../game/battleLogic";
 import CharacterSprite from "./CharacterSprite";
+import "./BattleCinema.css";
 
 interface Props {
   game: GameState;
@@ -77,6 +78,7 @@ export default function BattleArena({
       </div>
 
       <div
+        key={battle ? frameIndex : "idle"}
         className={`cinema-scene scene-room-${room} ${impact ? "scene-impact" : ""} ${showCastle ? "scene-breach" : ""}`}
         style={stageStyle}
       >
