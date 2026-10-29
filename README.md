@@ -1,32 +1,44 @@
-# React + TypeScript + Vite
+# 👹 마왕님, 용사가 너무 많아요!
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+3개의 방에 마왕군 몬스터를 배치해 용사들의 침입을 막는 웹 던전 디펜스 게임입니다.
 
-Currently, two official plugins are available:
+## 플레이하기
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+터미널에 출력되는 로컬 주소를 브라우저에서 열면 됩니다.
+
+## 게임 규칙 (V0.1)
+
+- 3개 방에 각각 몬스터 1마리를 고용할 수 있습니다.
+- 몬스터 5종: 끈적 슬라임, 고블린 전사, 해골 궁수, 폭탄 임프, 철갑 오크.
+- 웨이브 5개. 용사는 **1번 방부터 3번 방까지** 차례로 이동합니다.
+- 각 방에서는 몬스터가 먼저 공격합니다. 용사는 생존하면 반격합니다.
+- 몬스터 HP는 같은 웨이브의 다음 용사에게도 이어지지만, **웨이브 종료 시 회복**합니다.
+- 몬스터를 강화하거나, 방 사이에 재배치하고, 마왕성을 수리할 수 있습니다.
+- 격퇴 시 골드 보상과 웨이브 보상이 지급됩니다.
+- 5웨이브 종료까지 마왕성이 버티면 승리, 내구도가 0이 되면 패배입니다.
+
+## 개발
+
+- Vite + React + TypeScript, CSS 기반 애니메이션
+- 로컬 저장: `demon-lord-defense-v01` (브라우저 localStorage)
+- 파일 구성:
+  - `src/data/gameData.ts`: 몬스터와 용사 데이터, 웨이브 구성
+  - `src/game/battleLogic.ts`: 고용·강화·전투 시뮬레이션
+  - `src/types/game.ts`: 게임 자료형
+  - `src/App.tsx`: 메인 UI와 전투 재생 및 저장
+  - `src/App.css`: UI 스타일
+
+## 빌드 검사
+
+```powershell
+npm run build
+```
+
+전투는 먼저 프레임 배열을 생성하고, UI에서 순서대로 재생합니다. 전투 진행 중 새로고침하면 해당 웨이브는 준비 상태에서 다시 시작됩니다.
+
+이 프로젝트는 체험판이며 온라인 랭킹이나 백엔드는 없습니다.
